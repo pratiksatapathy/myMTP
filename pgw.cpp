@@ -157,16 +157,22 @@ void Pgw::handle_downlink_udata(Packet pkt, UdpClient &sgw_s5_client,int worker_
 	bool res;
 
 	ue_ip_addr = g_nw.get_dst_ip_addr(pkt);
+
+	TRACE(cout<<"ue ip:"<<ue_ip_addr<<endl;)
+	if(sgi_id.find(ue_ip_addr)==sgi_id.end())
+	pull_data_context(ue_ip_addr,s5_uteid_dl,imsi,worker_id);
+
 	imsi = get_imsi(0, 0, ue_ip_addr);
 	if (imsi == 0) {
 		TRACE(cout << "pgw_handledownlinkudata:" << " :zero imsi " << pkt.gtp_hdr.teid << " " << pkt.len << ": " << imsi << endl;)
-		return;
-		// g_utils.handle_type1_error(-1, "Zero imsi: pgw_handledownlinkudata");
-	}	
+				return;
+		 //g_utils.handle_type1_error(-1, "Zero imsi: pgw_handledownlinkudata");
+	}
+
 	res = get_downlink_info(imsi, s5_uteid_dl);
 	if (res) {
 		pkt.prepend_gtp_hdr(1, 3, pkt.len, s5_uteid_dl);
-		sgw_s5_client.set_server(g_sgw_s5_ip_addr, g_sgw_s5_port);
+		//sgw_s5_client.set_server(g_sgw_s5_ip_addr, g_sgw_s5_port);
 		sgw_s5_client.snd(pkt);
 		TRACE(cout << "pgw_handledownlinkudata:" << " downlink udata forwarded to sgw: " << pkt.len << ": " << imsi << endl;)
 	}
@@ -285,7 +291,36 @@ void Pgw::pull_context(Packet pkt,uint64_t &imsi,UeContext &local_ue_ctx,int wor
 
 
 }
+void Pgw::pull_data_context(string ue_ip,uint32_t& s5_uteid_dl,uint64_t& imsi, int worker_id){
 
+	// return;
+	Pgw_state pgw_state;
+
+	auto bundle = ds_sgi_id[worker_id].get(ue_ip);
+	if(bundle.ierr<0){
+
+			cout<<"pull fail:"<<ue_ip<<endl;
+
+		g_utils.handle_type1_error(-1, "datastore retrieval error: pull_context");
+
+	}else {
+
+		pgw_state =  (bundle.value);
+			//cout<<"pull success:"<<pkt.gtp_hdr.teid<<endl;
+
+	}
+	imsi = (pgw_state).imsi;
+	cout<<"pulled data ctx for imsi ------------------------------"<<imsi<<endl;
+	//cout<<"imsi val:"<<imsi<<endl;
+	g_sync.mlock(uectx_mux);
+	ue_ctx[imsi] = (pgw_state).Pgw_state_uect;
+	g_sync.munlock(uectx_mux);
+
+	g_sync.mlock(s5id_mux);
+	sgi_id[ue_ip] = imsi;
+	g_sync.munlock(s5id_mux);
+
+}
 void Pgw::erase_context(uint32_t s5_id,string ip_addr,int worker_id){
 
 

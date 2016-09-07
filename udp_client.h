@@ -12,7 +12,6 @@ class UdpClient {
 private:
 	/* Address parameters */
 	int conn_fd;
-	int port;
 	string ip_addr;
 	struct sockaddr_in sock_addr;
 
@@ -25,6 +24,8 @@ private:
 	void set_port();
 	
 public:
+	int port;
+
 	UdpClient();
 	void conn(string, string, int);
 	void set_client(string);

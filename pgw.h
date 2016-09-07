@@ -104,6 +104,9 @@ public:
 
 	void initialize_kvstore_clients(int );
 	void push_context(uint64_t ,UeContext ,int );
+
+	void pull_data_context(string ,uint32_t& ,uint64_t& , int );
+
 	void pull_context(Packet,uint64_t&,UeContext&,int);
 	void erase_context(uint32_t ,string ,int );
 

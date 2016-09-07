@@ -4,12 +4,13 @@ int g_s5_server_threads_count;
 int g_sgi_server_threads_count;
 vector<thread> g_s5_server_threads;
 vector<thread> g_sgi_server_threads;
+vector<UdpClient> sgw_s5_clients;
 Pgw g_pgw;
 
 void check_usage(int argc) {
 	if (argc < 3) {
 		TRACE(cout << "Usage: ./<pgw_server_exec> S5_SERVER_THREADS_COUNT SGI_SERVER_THREADS_COUNT" << endl;)
-		g_utils.handle_type1_error(-1, "Invalid usage error: pgwserver_checkusage");
+				g_utils.handle_type1_error(-1, "Invalid usage error: pgwserver_checkusage");
 	}
 }
 
@@ -26,6 +27,11 @@ void init(char *argv[]) {
 void run() {
 	int i;
 
+	//downlink clients
+	sgw_s5_clients.resize(g_s5_server_threads_count);
+	for (i = 0; i < g_sgi_server_threads_count; i++) {
+		sgw_s5_clients[i].conn(PGW,SGWLB,7200);
+	}
 	/* PGW S5 server */
 	TRACE(cout << "PGW S5 server started" << endl;)
 	g_pgw.s5_server.run(g_pgw_s5_ip_addr, g_pgw_s5_port);
@@ -63,31 +69,41 @@ void handle_s5_traffic(int worker_id) {
 		g_pgw.s5_server.rcv(src_sock_addr, pkt);
 		pkt.extract_gtp_hdr();
 		switch(pkt.gtp_hdr.msg_type) {
-			/* Create session */
-			case 1:
-				TRACE(cout << "pgwserver_handles5traffic:" << " case 1: create session" << endl;	)
-				g_pgw.handle_create_session(src_sock_addr, pkt,worker_id);
-				break;
+		/* Create session */
+		case 1:
+			TRACE(cout << "pgwserver_handles5traffic:" << " case 1: create session" << endl;	)
+			g_pgw.handle_create_session(src_sock_addr, pkt,worker_id);
+			break;
 
 			/* Uplink userplane data */
-			case 2:
-				TRACE(cout << "pgwserver_handles5traffic:" << " case 2: uplink udata" << endl;	)
-				g_pgw.handle_uplink_udata(pkt, sink_client,worker_id);
-				break;
+		case 2:
+			TRACE(cout << "pgwserver_handles5traffic:" << " case 2: uplink udata" << endl;	)
+			g_pgw.handle_uplink_udata(pkt, sink_client,worker_id);
+			break;
 
 			/* Detach */
-			case 4:
-				TRACE(cout << "pgwserver_handles5traffic:" << " case 4: detach" << endl;	)
-				g_pgw.handle_detach(src_sock_addr, pkt,worker_id);
-				break;
+		case 4:
+			TRACE(cout << "pgwserver_handles5traffic:" << " case 4: detach" << endl;	)
+			g_pgw.handle_detach(src_sock_addr, pkt,worker_id);
+			break;
 
 			/* For error handling */
-			default:
-				TRACE(cout << "pgwserver_handles5traffic:" << " default case:" << endl;	)
+		default:
+			TRACE(cout << "pgwserver_handles5traffic:" << " default case:" << endl;	)
 		}		
 	}
 }
-
+int getIndex(Packet pkt){
+	int size = g_s5_server_threads_count;
+	string ip = g_nw.get_dst_ip_addr(pkt);
+	ip = ip.substr(ip.find_last_of('.')+1, ip.size());
+TRACE(cout<<"ipval:"<<ip<<endl;)
+	int index = stoi(ip);
+	//cout<<"preindex:"<<index<<" "<<size<<endl;
+	index = index % size;
+	TRACE(cout<<"index:"<<index<<endl;)
+	return index;
+}
 void handle_sgi_traffic(int worker_id) {
 	UdpClient sgw_s5_client;
 	struct sockaddr_in src_sock_addr;
@@ -99,7 +115,7 @@ void handle_sgi_traffic(int worker_id) {
 
 		/* Downlink userplane data */
 		TRACE(cout << "pgwserver_handlesgitraffic: downlink udata" << endl;	)
-		g_pgw.handle_downlink_udata(pkt, sgw_s5_client,worker_id);
+		g_pgw.handle_downlink_udata(pkt, sgw_s5_clients[getIndex(pkt)],worker_id);
 	}	
 }
 

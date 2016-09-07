@@ -21,6 +21,7 @@ void init(char *argv[]) {
 	signal(SIGPIPE, SIG_IGN);
 }
 
+
 void run() {
 	int i;
 	

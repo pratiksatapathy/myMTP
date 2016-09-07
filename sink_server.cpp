@@ -4,6 +4,7 @@ int g_threads_count;
 vector<thread> g_threads;
 thread g_mon_thread;
 TrafficMonitor g_traf_mon;
+vector<UdpClient> pgw_sgi_clients;
 
 void traffic_monitor() {
 	fd_set rcv_set;
@@ -23,7 +24,7 @@ void traffic_monitor() {
 			g_traf_mon.handle_uplink_udata();
 		}
 		else if (FD_ISSET(g_traf_mon.tun.conn_fd, &rcv_set)) {
-			g_traf_mon.handle_downlink_udata();
+			g_traf_mon.handle_downlink_udata(pgw_sgi_clients);
 		}
 	}
 }
@@ -47,8 +48,14 @@ void check_usage(int argc) {
 void init(char *argv[]) {
 	g_threads_count = atoi(argv[1]);
 	g_threads.resize(g_threads_count);
-}
+	pgw_sgi_clients.resize(g_threads_count);
 
+for (int i = 0; i < g_threads_count; i++) {
+
+		pgw_sgi_clients[i].conn(g_sink_ip_addr, g_pgw_sgi_ip_addr, g_pgw_sgi_port);
+
+	}
+}
 void run() {
 	int i;
 

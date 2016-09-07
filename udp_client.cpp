@@ -47,7 +47,7 @@ void UdpClient::snd(Packet pkt) {
 
 	while (1) {
 		status = sendto(conn_fd, pkt.data, pkt.len, 0, (sockaddr*)&server_sock_addr, g_sock_addr_len);
-		if (errno == EPERM) {
+		if (errno == EPERM || errno == EINVAL) {
 			errno = 0;
 			usleep(1000);
 			continue;

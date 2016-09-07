@@ -14,6 +14,7 @@
 #include "udp_client.h"
 #include "udp_server.h"
 #include "utils.h"
+#include <algorithm>
 
 extern string g_ran_ip_addr;
 extern string g_trafmon_ip_addr;
@@ -106,16 +107,22 @@ private:
 	/* Lock parameter */
 	pthread_mutex_t uplinkinfo_mux; /* Handles uplink_info */
 
+	vector<UdpClient> sgw_s1_clients;
 	bool get_uplink_info(string, uint32_t&, string&, int&);
 
 public:
 	Tun tun;
 	UdpServer server;
+	int client_count;
 
 	TrafficMonitor();
-	void handle_uplink_udata(UdpClient&);
+	void handle_uplink_udata();
 	void handle_downlink_udata();
+
 	void update_uplink_info(string, uint32_t, string, int);
+
+	void initialize();
+
 	~TrafficMonitor();
 };
 

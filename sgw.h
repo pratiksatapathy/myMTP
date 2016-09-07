@@ -128,7 +128,7 @@ public:
 //	void push_s11(UeContext ,uint64_t ,KVStore<uint32_t,Sgw_state> );
 
 
-	void pull_context(Packet ,int );
+	void pull_data_context(int , Packet , int );
 	void erase_context(uint32_t ,uint32_t ,uint32_t ,int );
 
 

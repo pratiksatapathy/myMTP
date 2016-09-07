@@ -22,7 +22,7 @@ public:
 	UdpServer server;
 
 	void handle_uplink_udata();
-	void handle_downlink_udata();
+	void handle_downlink_udata(vector<UdpClient>&);
 };
 
 #endif /* SINK_H */

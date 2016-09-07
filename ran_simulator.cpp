@@ -13,22 +13,25 @@ vector<thread> g_threads;
 thread g_rtt_thread;
 TrafficMonitor g_traf_mon;
 
-//void utraffic_monitor() {
-//	UdpClient sgw_s1_client;
-//
-//	sgw_s1_client.set_client(g_trafmon_ip_addr);
-//	while (1) {
-//		g_traf_mon.handle_uplink_udata(sgw_s1_client);
-//	}
-//
-//}
-//
-//void dtraffic_monitor() {
-//	while (1) {
-//		g_traf_mon.handle_downlink_udata();
-//	}
-//}
 
+void utraffic_monitor() {
+	//UdpClient sgw_s1_client;
+	cout<<"once execution"<<endl;
+	//sgw_s1_client.set_client(g_trafmon_ip_addr);
+	//UdpClient sgw_s1_client;
+		//sgw_s1_client.set_client(g_trafmon_ip_addr);
+	while (1) {
+		g_traf_mon.handle_uplink_udata();
+	}
+	
+}
+
+void dtraffic_monitor() {
+	while (1) {
+		g_traf_mon.handle_downlink_udata();		
+	}
+}
+/*
 void ping(){
 	string cmd;
 	
@@ -36,7 +39,6 @@ void ping(){
 	cout << cmd << endl;
 	system(cmd.c_str());
 }
-/*
 */
 
 void simulate(int arg) {
@@ -55,7 +57,6 @@ void simulate(int arg) {
 	ran.conn_mme();
 
 	while (1) {
-
 		// Run duration check
 		g_utils.time_check(g_start_time, g_req_dur, time_exceeded);
 		if (time_exceeded) {
@@ -112,15 +113,15 @@ void simulate(int arg) {
 		
 		// Response time
 		mtime_diff_us = std::chrono::duration_cast<MICROSECONDS>(mstop_time - mstart_time);
-		//sleep(2);
+
 		/* Updating performance metrics */
 		g_sync.mlock(g_mux);
 		g_tot_regs++;
 		g_tot_regstime += mtime_diff_us.count();		
 		g_sync.munlock(g_mux);
+
+//cout<<"marker reached"<<endl;
 		//break;
-
-
 	}
 }
 
@@ -147,14 +148,20 @@ void init(char *argv[]) {
 void run() {
 	int i;
 
-	/* Tun
+	///* Tun
 	g_traf_mon.tun.set_itf("tun1", "172.16.0.1/16");
 	g_traf_mon.tun.conn("tun1");
 
-	/* Traffic monitor server //*
+	/* Traffic monitor server //*/
 	TRACE(cout << "Traffic monitor server started" << endl;)
 	g_traf_mon.server.run(g_trafmon_ip_addr, g_trafmon_port);	
 
+	//preparing data transfer clients
+	cout<<"sgwclient initiated"<<endl;
+
+	cout<<"sgwclient initiated"<<endl;
+	g_traf_mon.client_count = g_threads_count;
+	g_traf_mon.initialize(); //initializing sgw client heads
 	// Uplink traffic monitor
 	for (i = 0; i < NUM_MONITORS; i++) {
 		g_umon_thread[i] = thread(utraffic_monitor);

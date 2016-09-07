@@ -6,6 +6,8 @@ int g_s5_server_threads_count;
 vector<thread> g_s11_server_threads;
 vector<thread> g_s1_server_threads;
 vector<thread> g_s5_server_threads;
+vector<UdpClient> pgw_s5_clients;
+
 Sgw g_sgw;
 
 void check_usage(int argc) {
@@ -29,6 +31,11 @@ void init(char *argv[]) {
 void run() {
 	int i;
 
+	//uplink clients
+	pgw_s5_clients.resize(g_s1_server_threads_count);
+		for (i = 0; i < g_s1_server_threads_count; i++) {
+			pgw_s5_clients[i].conn(SGW,PGWLB,8000);
+		}
 	/* SGW S11 server */
 	TRACE(cout << "SGW S11 server started" << endl;)
 	g_sgw.s11_server.run(g_sgw_s11_ip_addr, g_sgw_s11_port);
@@ -74,6 +81,7 @@ void handle_s11_traffic(int worker_id) {
 	Packet pkt;
 
 	pgw_s5_client.set_client(g_sgw_s5_ip_addr);
+
 	while (1) {
 		g_sgw.s11_server.rcv(src_sock_addr, pkt);
 		pkt.extract_gtp_hdr();
@@ -102,13 +110,25 @@ void handle_s11_traffic(int worker_id) {
 		}		
 	}
 }
-
+int getIndex(Packet pkt){
+	int size = g_s5_server_threads_count;
+	string ip = g_nw.get_dst_ip_addr(pkt);
+	TRACE(cout<<"original ip: "<<ip<<endl;)
+	ip = ip.substr(ip.find_last_of('.')+1, ip.size());
+TRACE(cout<<"ipval:"<<ip<<endl;)
+	int index = stoi(ip);
+	//cout<<"preindex:"<<index<<" "<<size<<endl;
+	index = index % size;
+	TRACE(cout<<"index:"<<index<<endl;)
+	return index;
+}
 void handle_s1_traffic(int worker_id) {
 	UdpClient pgw_s5_client;
 	struct sockaddr_in src_sock_addr;
 	Packet pkt;
 
 	pgw_s5_client.set_client(g_sgw_s5_ip_addr);
+
 	while (1) {
 		g_sgw.s1_server.rcv(src_sock_addr, pkt);
 		pkt.extract_gtp_hdr();
@@ -116,7 +136,7 @@ void handle_s1_traffic(int worker_id) {
 		/* Uplink userplane data */
 		case 1:
 			TRACE(cout << "sgwserver_handles1traffic:" << " case 1: uplink udata" << endl;)
-			g_sgw.handle_uplink_udata(pkt, pgw_s5_client,worker_id);
+			g_sgw.handle_uplink_udata(pkt, pgw_s5_clients[getIndex(pkt)],worker_id);
 			break;
 
 			/* For error handling */
