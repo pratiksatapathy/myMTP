@@ -100,7 +100,11 @@ void TrafficMonitor::handle_uplink_udata() {
 	bool res;
 
 	tun.rcv(pkt);
+	//XXX change
 	ip_addr = g_nw.get_src_ip_addr(pkt);
+	//index = ((abs(rand()))%10);
+	//cout<<index<<endl;
+	//index = rand()*50;
 	// TRACE(cout << "trafficmonitor_handleuplinkudata:" << " " << pkt.len << ":**" << ip_addr << "**" << endl;)
 	res = get_uplink_info(ip_addr, s1_uteid_ul, sgw_s1_ip_addr, sgw_s1_port);
 	if (res == true) {
@@ -370,7 +374,7 @@ void Ran::transfer_data(int arg_rate) {
 	string redir_err;
 	string server_ip_addr;
 	int server_port;
-	arg_rate = 10000;
+	arg_rate = 50;
 	rate = " -b " + to_string(arg_rate) + "M";
 	mtu = " -M " + to_string(DATA_SIZE);
 	dur = " -t 40";
