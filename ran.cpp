@@ -373,8 +373,9 @@ void Ran::transfer_data(int arg_rate) {
 	string dur;
 	string redir_err;
 	string server_ip_addr;
+	//string more = "";
 	int server_port;
-	arg_rate = 50;
+	arg_rate = 400;
 	rate = " -b " + to_string(arg_rate) + "M";
 	mtu = " -M " + to_string(DATA_SIZE);
 	dur = " -t 40";
@@ -383,7 +384,7 @@ void Ran::transfer_data(int arg_rate) {
 	server_port = ran_ctx.key + 55000;
 	g_nw.add_itf(ran_ctx.key, ran_ctx.ip_addr + "/8");
 	// cmd = "iperf3 -B " + ran_ctx.ip_addr + " -c " + server_ip_addr + " -p " + to_string(server_port) + rate + dur + redir_err;	
-	cmd = "iperf3 -B " + ran_ctx.ip_addr + " -c " + server_ip_addr + " -p " + to_string(server_port) + rate + mtu + dur + redir_err;	
+	cmd = "iperf3 -B " + ran_ctx.ip_addr + " -c " + server_ip_addr + " -p " + to_string(server_port) + rate + mtu + dur + redir_err;
 	TRACE(cout << cmd << endl;)
 	system(cmd.c_str());
 	// g_nw.rem_itf(ran_ctx.key);

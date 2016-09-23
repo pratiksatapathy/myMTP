@@ -533,7 +533,7 @@ void Sgw::handle_detach(struct sockaddr_in src_sock_addr, Packet pkt, UdpClient 
 	pkt.append_item(eps_bearer_id);
 	pkt.append_item(tai);
 	pkt.prepend_gtp_hdr(2, 4, pkt.len, s5_cteid_ul);
-	cout<<"pgwsnd"<<endl;
+	//cout<<"pgwsnd"<<endl;
 	pgw_s5_client.snd(pkt);
 	TRACE(cout << "sgw_handledetach:" << " detach request sent to pgw: " << imsi << endl;)
 

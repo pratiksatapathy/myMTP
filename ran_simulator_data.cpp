@@ -13,7 +13,7 @@ vector<thread> g_threads;
 thread g_rtt_thread;
 TrafficMonitor g_traf_mon;
 
-/*
+
 void utraffic_monitor() {
 	//UdpClient sgw_s1_client;
 	cout<<"once execution"<<endl;
@@ -92,15 +92,15 @@ void simulate(int arg) {
 
 		///*
 		// To find RTT
-//		if (ran_num == 0) {
-//cout<<"===========ping============="<<endl;
-//			g_rtt_thread = thread(ping);
-//			g_rtt_thread.detach();
-//		}
+		if (ran_num == 0) {
+cout<<"===========ping============="<<endl;
+			g_rtt_thread = thread(ping);
+			g_rtt_thread.detach();		
+		}
 		//*/
 
 		/* Data transfer */
-		//ran.transfer_data(g_req_dur);
+		ran.transfer_data(g_req_dur);
 		
 		// Detach
 		ok = ran.detach();
@@ -149,11 +149,11 @@ void init(char *argv[]) {
 void run() {
 	int i;
 
-	/* Tun
+	///* Tun
 	g_traf_mon.tun.set_itf("tun1", "172.16.0.1/16");
 	g_traf_mon.tun.conn("tun1");
 
-	/* Traffic monitor server
+	/* Traffic monitor server //*/
 	TRACE(cout << "Traffic monitor server started" << endl;)
 	g_traf_mon.server.run(g_trafmon_ip_addr, g_trafmon_port);	
 

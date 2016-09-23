@@ -33,6 +33,7 @@ void SctpClient::connect_with_server() {
 			break;
 		}
 	}
+	if(status<0)cout<<"serverip:"<<server_ip_addr<<endl;
 	g_utils.handle_type1_error(status, "Connect error: sctpclient_connectwithserver");
 }
 
