@@ -5,7 +5,7 @@
 string g_sgw_s5_ip_addr = SGWLB;
 string g_pgw_s5_ip_addr = PGW;
 string g_pgw_sgi_ip_addr = PGW;
-string g_sink_ip_addr = "10.129.26.225";
+string g_sink_ip_addr = "10.129.28.19";
 int g_sgw_s5_port = 7200;
 int g_pgw_s5_port = 8000;
 int g_pgw_sgi_port = 8100;
@@ -44,8 +44,6 @@ void UeContext::serialize(Archive &ar, const unsigned int version)
 
 Pgw::Pgw() {
 
-
-
 	clrstl();
 	set_ip_addrs();
 	g_sync.mux_init(s5id_mux);	
@@ -56,29 +54,23 @@ Pgw::Pgw() {
 }
 void Pgw::initialize_kvstore_clients(int workers_count){
 
-
-	//ds_ip_addrs.resize(workers_count);
 	ds_sgi_id.resize(workers_count);
 	ds_s5_id.resize(workers_count);
 	ds_all.resize(workers_count);
 
 	for(int i=0;i<workers_count;i++){
 
-		//ds_ip_addrs[i].bind(dssgw_path,"ds_ip_addrs");
 		ds_sgi_id[i].bind(dspgw_path,SGI_ID);
 		ds_s5_id[i].bind(dspgw_path,S5_ID);
 		ds_all[i].bind(dspgw_path);
-
-		//ds_ue_ctx[i].bind(dssgw_path,"ds_ue_ctx");
-
 	}
 
 }
 void Pgw::clrstl() {
-		s5_id.clear();
-		sgi_id.clear();
-		ue_ctx.clear();
-		ip_addrs.clear();
+	s5_id.clear();
+	sgi_id.clear();
+	ue_ctx.clear();
+	ip_addrs.clear();
 }
 
 void Pgw::handle_create_session(struct sockaddr_in src_sock_addr, Packet pkt,int worker_id) {
@@ -101,17 +93,10 @@ void Pgw::handle_create_session(struct sockaddr_in src_sock_addr, Packet pkt,int
 	s5_cteid_ul = s5_cteid_dl;
 	s5_uteid_ul = s5_cteid_dl;
 	ue_ip_addr = ip_addrs[imsi];
-	//update_itfid(5, s5_uteid_ul, "", imsi);
-	//cout<<"attached teid"<<s5_uteid_ul<<endl;
-	//update_itfid(0, 0, ue_ip_addr, imsi);
 
 	UeContext local_ue_ctx;
-	//g_sync.mlock(uectx_mux);
 	local_ue_ctx.init(ue_ip_addr, tai, apn_in_use, eps_bearer_id, s5_uteid_ul, s5_uteid_dl, s5_cteid_ul, s5_cteid_dl);
-	//local_ue_ctx = ue_ctx[imsi];
-	//g_sync.munlock(uectx_mux);
 
-	//sync this information to datastore
 	push_context(imsi,local_ue_ctx,worker_id);
 
 	pkt.clear_pkt();
@@ -125,23 +110,15 @@ void Pgw::handle_create_session(struct sockaddr_in src_sock_addr, Packet pkt,int
 }
 void Pgw::push_context(uint64_t imsi,UeContext local_ue_ctx,int worker_id){
 
-	//cout<<"push try:"<<local_ue_ctx.s5_uteid_ul<<":"<<imsi<<endl;
-
-	//cout<<"start"<<worker_id<<endl;
-	//worker_id = 0;
 	Pgw_state state_data;
 	state_data = Pgw_state(local_ue_ctx,imsi);
 
 	ds_all[worker_id].put<uint32_t,Pgw_state>(local_ue_ctx.s5_uteid_ul,state_data,S5_ID);
 	ds_all[worker_id].put<string,Pgw_state>(local_ue_ctx.ip_addr,state_data,SGI_ID);
-	//ds_all[worker_id].put<uint32_t,Sgw_state>(local_ue_ctx.s5_uteid_dl,state_data,"ds_s5_id");
 
 	ds_all[worker_id].execute();
 	ds_all[worker_id].reset();
 
-
-	//cout<<"end"<<worker_id<<endl;
-//	cout<<"did come here"<<endl;
 }
 void Pgw::handle_uplink_udata(Packet pkt, UdpClient &sink_client,int worker_id) {
 	pkt.truncate();
@@ -160,19 +137,17 @@ void Pgw::handle_downlink_udata(Packet pkt, UdpClient &sgw_s5_client,int worker_
 
 	TRACE(cout<<"ue ip:"<<ue_ip_addr<<endl;)
 	if(sgi_id.find(ue_ip_addr)==sgi_id.end())
-	pull_data_context(ue_ip_addr,s5_uteid_dl,imsi,worker_id);
+		pull_data_context(ue_ip_addr,s5_uteid_dl,imsi,worker_id);
 
 	imsi = get_imsi(0, 0, ue_ip_addr);
 	if (imsi == 0) {
 		TRACE(cout << "pgw_handledownlinkudata:" << " :zero imsi " << pkt.gtp_hdr.teid << " " << pkt.len << ": " << imsi << endl;)
-				return;
-		 //g_utils.handle_type1_error(-1, "Zero imsi: pgw_handledownlinkudata");
+						return;
 	}
 
 	res = get_downlink_info(imsi, s5_uteid_dl);
 	if (res) {
 		pkt.prepend_gtp_hdr(1, 3, pkt.len, s5_uteid_dl);
-		//sgw_s5_client.set_server(g_sgw_s5_ip_addr, g_sgw_s5_port);
 		sgw_s5_client.snd(pkt);
 		TRACE(cout << "pgw_handledownlinkudata:" << " downlink udata forwarded to sgw: " << pkt.len << ": " << imsi << endl;)
 	}
@@ -190,20 +165,15 @@ void Pgw::handle_detach(struct sockaddr_in src_sock_addr, Packet pkt,int worker_
 
 	res = true;
 	pull_context(pkt,imsi,local_ue_ctx,worker_id);
-	//imsi = get_imsi(5, pkt.gtp_hdr.teid, "");
 	if (imsi == 0) {
 		TRACE(cout << "pgw_handledetach:" << " :zero imsi " << pkt.gtp_hdr.teid << " " << pkt.len << ": " << imsi << endl;)
-		g_utils.handle_type1_error(-1, "Zero imsi: pgw_handledetach");
+				g_utils.handle_type1_error(-1, "Zero imsi: pgw_handledetach");
 	}	
 	pkt.extract_item(eps_bearer_id);
 	pkt.extract_item(tai);
 	s5_cteid_ul = local_ue_ctx.s5_cteid_ul;
 	s5_cteid_dl = local_ue_ctx.s5_cteid_dl;
 	ue_ip_addr = local_ue_ctx.ip_addr;
-
-	//rem_itfid(5, s5_cteid_ul, "");
-	//rem_itfid(0, 0, ue_ip_addr);
-	//rem_uectx(imsi);
 
 	erase_context(s5_cteid_ul,ue_ip_addr,worker_id);
 
@@ -244,74 +214,60 @@ void Pgw::set_ip_addrs() {
 
 void Pgw::update_itfid(int itf_id_no, uint32_t teid, string ue_ip_addr, uint64_t imsi) {
 	switch (itf_id_no) {
-		case 5:
-			g_sync.mlock(s5id_mux);
-			s5_id[teid] = imsi;
-			g_sync.munlock(s5id_mux);
-			break;
-		case 0:
-			g_sync.mlock(sgiid_mux);
-			sgi_id[ue_ip_addr] = imsi;
-			g_sync.munlock(sgiid_mux);
-			break;
-		default:
-			g_utils.handle_type1_error(-1, "incorrect itf_id_no: pgw_updateitfid");
+	case 5:
+		g_sync.mlock(s5id_mux);
+		s5_id[teid] = imsi;
+		g_sync.munlock(s5id_mux);
+		break;
+	case 0:
+		g_sync.mlock(sgiid_mux);
+		sgi_id[ue_ip_addr] = imsi;
+		g_sync.munlock(sgiid_mux);
+		break;
+	default:
+		g_utils.handle_type1_error(-1, "incorrect itf_id_no: pgw_updateitfid");
 	}
 }
 
 void Pgw::pull_context(Packet pkt,uint64_t &imsi,UeContext &local_ue_ctx,int worker_id){
-
-		//cout<<"pull try:"<<pkt.gtp_hdr.teid<<endl;
 
 	Pgw_state pgw_state;
 
 	auto bundle = ds_s5_id[worker_id].get(pkt.gtp_hdr.teid);
 	if(bundle.ierr<0){
 
-			cout<<"pull fail:"<<pkt.gtp_hdr.teid<<endl;
+		cout<<"pull fail:"<<pkt.gtp_hdr.teid<<endl;
 
 		g_utils.handle_type1_error(-1, "datastore retrieval error: pull_context");
 
 	}else {
 
 		pgw_state =  (bundle.value);
-			//cout<<"pull success:"<<pkt.gtp_hdr.teid<<endl;
 
 	}
 	imsi = (pgw_state).imsi;
 
-	//cout<<"imsi val:"<<imsi<<endl;
-	//g_sync.mlock(uectx_mux);
 	local_ue_ctx = (pgw_state).Pgw_state_uect;
-	//g_sync.munlock(uectx_mux);
-
-//	g_sync.mlock(s5id_mux);
-//	s5_id[pkt.gtp_hdr.teid] = imsi;
-//	g_sync.munlock(s5id_mux);
-
 
 }
 void Pgw::pull_data_context(string ue_ip,uint32_t& s5_uteid_dl,uint64_t& imsi, int worker_id){
 
-	// return;
 	Pgw_state pgw_state;
 
 	auto bundle = ds_sgi_id[worker_id].get(ue_ip);
 	if(bundle.ierr<0){
 
-			cout<<"pull fail:"<<ue_ip<<endl;
+		cout<<"pull fail:"<<ue_ip<<endl;
 
 		g_utils.handle_type1_error(-1, "datastore retrieval error: pull_context");
 
 	}else {
 
 		pgw_state =  (bundle.value);
-			//cout<<"pull success:"<<pkt.gtp_hdr.teid<<endl;
 
 	}
 	imsi = (pgw_state).imsi;
 	cout<<"pulled data ctx for imsi ------------------------------"<<imsi<<endl;
-	//cout<<"imsi val:"<<imsi<<endl;
 	g_sync.mlock(uectx_mux);
 	ue_ctx[imsi] = (pgw_state).Pgw_state_uect;
 	g_sync.munlock(uectx_mux);
@@ -324,15 +280,11 @@ void Pgw::pull_data_context(string ue_ip,uint32_t& s5_uteid_dl,uint64_t& imsi, i
 void Pgw::erase_context(uint32_t s5_id,string ip_addr,int worker_id){
 
 
-		//cout<<"push try:"<<local_ue_ctx.s11_cteid_sgw<<":"<<imsi<<endl;
+	ds_all[worker_id].del<uint32_t,Pgw_state>(s5_id,S5_ID);
+	ds_all[worker_id].del<string,Pgw_state>(ip_addr,SGI_ID);
 
-		//cout<<"start"<<worker_id<<endl;
-
-		ds_all[worker_id].del<uint32_t,Pgw_state>(s5_id,S5_ID);
-		ds_all[worker_id].del<string,Pgw_state>(ip_addr,SGI_ID);
-
-		ds_all[worker_id].execute();
-		ds_all[worker_id].reset();
+	ds_all[worker_id].execute();
+	ds_all[worker_id].reset();
 
 }
 
@@ -341,22 +293,22 @@ uint64_t Pgw::get_imsi(int itf_id_no, uint32_t teid, string ue_ip_addr) {
 
 	imsi = 0;
 	switch (itf_id_no) {
-		case 5:
-			g_sync.mlock(s5id_mux);
-			if (s5_id.find(teid) != s5_id.end()) {
-				imsi = s5_id[teid];
-			}
-			g_sync.munlock(s5id_mux);
-			break;
-		case 0:
-			g_sync.mlock(sgiid_mux);
-			if (sgi_id.find(ue_ip_addr) != sgi_id.end()) {
-				imsi = sgi_id[ue_ip_addr];
-			}
-			g_sync.munlock(sgiid_mux);
-			break;
-		default:
-			g_utils.handle_type1_error(-1, "incorrect itf_id_no: pgw_getimsi");
+	case 5:
+		g_sync.mlock(s5id_mux);
+		if (s5_id.find(teid) != s5_id.end()) {
+			imsi = s5_id[teid];
+		}
+		g_sync.munlock(s5id_mux);
+		break;
+	case 0:
+		g_sync.mlock(sgiid_mux);
+		if (sgi_id.find(ue_ip_addr) != sgi_id.end()) {
+			imsi = sgi_id[ue_ip_addr];
+		}
+		g_sync.munlock(sgiid_mux);
+		break;
+	default:
+		g_utils.handle_type1_error(-1, "incorrect itf_id_no: pgw_getimsi");
 	}
 	return imsi;
 }
@@ -376,18 +328,18 @@ bool Pgw::get_downlink_info(uint64_t imsi, uint32_t &s5_uteid_dl) {
 
 void Pgw::rem_itfid(int itf_id_no, uint32_t teid, string ue_ip_addr) {
 	switch (itf_id_no) {
-		case 5:
-			g_sync.mlock(s5id_mux);
-			s5_id.erase(teid);
-			g_sync.munlock(s5id_mux);
-			break;
-		case 0:
-			g_sync.mlock(sgiid_mux);
-			sgi_id.erase(ue_ip_addr);
-			g_sync.munlock(sgiid_mux);
-			break;
-		default:
-			g_utils.handle_type1_error(-1, "incorrect itf_id_no: pgw_remitfid");
+	case 5:
+		g_sync.mlock(s5id_mux);
+		s5_id.erase(teid);
+		g_sync.munlock(s5id_mux);
+		break;
+	case 0:
+		g_sync.mlock(sgiid_mux);
+		sgi_id.erase(ue_ip_addr);
+		g_sync.munlock(sgiid_mux);
+		break;
+	default:
+		g_utils.handle_type1_error(-1, "incorrect itf_id_no: pgw_remitfid");
 	}
 }
 

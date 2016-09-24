@@ -8,7 +8,7 @@ vector<UdpClient> sgw_s11_clients;
 void check_usage(int argc) {
 	if (argc < 2) {
 		TRACE(cout << "Usage: ./<mme_server_exec> THREADS_COUNT" << endl;)
-		g_utils.handle_type1_error(-1, "Invalid usage error: mmeserver_checkusage");
+				g_utils.handle_type1_error(-1, "Invalid usage error: mmeserver_checkusage");
 	}
 }
 
@@ -16,7 +16,7 @@ void init(char *argv[]) {
 	g_workers_count = atoi(argv[1]);
 	hss_clients.resize(g_workers_count);
 	sgw_s11_clients.resize(g_workers_count);
-	g_mme.initialize_kvstore_clients(g_workers_count); //error handling
+	g_mme.initialize_kvstore_clients(g_workers_count);
 
 	signal(SIGPIPE, SIG_IGN);
 }
@@ -24,14 +24,14 @@ void init(char *argv[]) {
 
 void run() {
 	int i;
-	
+
 	TRACE(cout << "MME server started" << endl;)
-	
+
 	for (i = 0; i < g_workers_count; i++) {
 		hss_clients[i].conn(g_hss_ip_addr, g_hss_port);	
 		sgw_s11_clients[i].conn(g_mme_ip_addr, g_sgw_s11_ip_addr, g_sgw_s11_port);
 	}
-	
+
 	g_mme.server.run(g_mme_ip_addr, g_mme_port, g_workers_count, handle_ue);
 }
 
@@ -42,71 +42,71 @@ int handle_ue(int conn_fd, int worker_id) {
 	g_mme.server.rcv(conn_fd, pkt);
 	if (pkt.len <= 0) {
 		TRACE(cout << "mmeserver_handleue:" << " Connection closed" << endl;)
-		return 0;
+				return 0;
 	}
 	pkt.extract_s1ap_hdr();
 	if (pkt.s1ap_hdr.mme_s1ap_ue_id == 0) {
 		switch (pkt.s1ap_hdr.msg_type) {
-			/* Initial Attach request */
-			case 1: 
-				TRACE(cout << "mmeserver_handleue:" << " case 1: initial attach" << endl;)
-				g_mme.handle_initial_attach(conn_fd, pkt, hss_clients[worker_id],worker_id);
-				break;
+		/* Initial Attach request */
+		case 1:
+			TRACE(cout << "mmeserver_handleue:" << " case 1: initial attach" << endl;)
+			g_mme.handle_initial_attach(conn_fd, pkt, hss_clients[worker_id],worker_id);
+			break;
 
 			/* For error handling */
-			default:
-				TRACE(cout << "mmeserver_handleue:" << " default case: new" << endl;)
-				break;
+		default:
+			TRACE(cout << "mmeserver_handleue:" << " default case: new" << endl;)
+			break;
 		}		
 	}
 	else if (pkt.s1ap_hdr.mme_s1ap_ue_id > 0) {
 		switch (pkt.s1ap_hdr.msg_type) {
-			/* Authentication response */
-			case 2: 
-				TRACE(cout << "mmeserver_handleue:" << " case 2: authentication response" << endl;)
-				res = g_mme.handle_autn(conn_fd, pkt,worker_id);
-				if (res) {
-					g_mme.handle_security_mode_cmd(conn_fd, pkt,worker_id);
-				}
-				break;
+		/* Authentication response */
+		case 2:
+			TRACE(cout << "mmeserver_handleue:" << " case 2: authentication response" << endl;)
+			res = g_mme.handle_autn(conn_fd, pkt,worker_id);
+			if (res) {
+				g_mme.handle_security_mode_cmd(conn_fd, pkt,worker_id);
+			}
+			break;
 
 			/* Security Mode Complete */
-			case 3: 
-				TRACE(cout << "mmeserver_handleue:" << " case 3: security mode complete" << endl;)
-				//sgw_s11_clients[worker_id].conn(g_mme_ip_addr, g_sgw_s11_ip_addr, g_sgw_s11_port);
+		case 3:
+			TRACE(cout << "mmeserver_handleue:" << " case 3: security mode complete" << endl;)
+			//sgw_s11_clients[worker_id].conn(g_mme_ip_addr, g_sgw_s11_ip_addr, g_sgw_s11_port);
 
-				res = g_mme.handle_security_mode_complete(conn_fd, pkt,worker_id);
-				if (res) {
-					// g_mme.handle_location_update(pkt, hss_clients[worker_id]);
-					g_mme.handle_create_session(conn_fd, pkt, sgw_s11_clients[worker_id],worker_id);
-				}
-				//sgw_s11_clients[worker_id].close();
-				break;
+			res = g_mme.handle_security_mode_complete(conn_fd, pkt,worker_id);
+			if (res) {
+				// g_mme.handle_location_update(pkt, hss_clients[worker_id]);
+				g_mme.handle_create_session(conn_fd, pkt, sgw_s11_clients[worker_id],worker_id);
+			}
+			//sgw_s11_clients[worker_id].close();
+			break;
 
 			/* Attach Complete */
-			case 4: 
-				TRACE(cout << "mmeserver_handleue:" << " case 4: attach complete" << endl;)
-				//sgw_s11_clients[worker_id].conn(g_mme_ip_addr, g_sgw_s11_ip_addr, g_sgw_s11_port);
+		case 4:
+			TRACE(cout << "mmeserver_handleue:" << " case 4: attach complete" << endl;)
+			//sgw_s11_clients[worker_id].conn(g_mme_ip_addr, g_sgw_s11_ip_addr, g_sgw_s11_port);
 
-				g_mme.handle_attach_complete(pkt,worker_id);
-				g_mme.handle_modify_bearer(conn_fd, pkt, sgw_s11_clients[worker_id],worker_id);
-				//sgw_s11_clients[worker_id].close();
-				break;
+			g_mme.handle_attach_complete(pkt,worker_id);
+			g_mme.handle_modify_bearer(conn_fd, pkt, sgw_s11_clients[worker_id],worker_id);
+			//sgw_s11_clients[worker_id].close();
+			break;
 
 			/* Detach request */
-			case 5: 
-				TRACE(cout << "mmeserver_handleue:" << " case 5: detach request" << endl;)
-				//sgw_s11_clients[worker_id].conn(g_mme_ip_addr, g_sgw_s11_ip_addr, g_sgw_s11_port);
+		case 5:
+			TRACE(cout << "mmeserver_handleue:" << " case 5: detach request" << endl;)
+			//sgw_s11_clients[worker_id].conn(g_mme_ip_addr, g_sgw_s11_ip_addr, g_sgw_s11_port);
 
-				g_mme.handle_detach(conn_fd, pkt, sgw_s11_clients[worker_id],worker_id);
-				//sgw_s11_clients[worker_id].close();
+			g_mme.handle_detach(conn_fd, pkt, sgw_s11_clients[worker_id],worker_id);
+			//sgw_s11_clients[worker_id].close();
 
-				break;
+			break;
 
 			/* For error handling */	
-			default:
-				TRACE(cout << "mmeserver_handleue:" << " default case: attached" << endl;)
-				break;
+		default:
+			TRACE(cout << "mmeserver_handleue:" << " default case: attached" << endl;)
+			break;
 		}				
 	}		
 	return 1;

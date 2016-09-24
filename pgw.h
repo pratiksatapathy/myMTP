@@ -21,7 +21,7 @@ extern int g_sgw_s5_port;
 extern int g_pgw_s5_port;
 extern int g_pgw_sgi_port;
 extern int g_sink_port;
-const string dspgw_path = "10.129.26.186:8090";
+const string dspgw_path = "10.129.28.113:8090";
 
 
 

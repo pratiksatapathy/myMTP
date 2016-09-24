@@ -33,7 +33,7 @@ Packet& Packet::operator=(Packet src_obj) {
 }
 
 Packet::Packet(Packet &&src_obj)
-	:Packet() {
+:Packet() {
 	swap(*this, src_obj);	
 }
 
@@ -55,7 +55,7 @@ void Packet::append_item(int item) {
 
 void Packet::append_item(uint8_t item) {
 	int item_len = sizeof(uint8_t);
-	
+
 	memmove(data + data_ptr, &item, item_len * sizeof(uint8_t));
 	data_ptr += item_len;
 	len += item_len;
@@ -63,7 +63,7 @@ void Packet::append_item(uint8_t item) {
 
 void Packet::append_item(uint16_t item) {
 	int item_len = sizeof(uint16_t);
-	
+
 	memmove(data + data_ptr, &item, item_len * sizeof(uint8_t));
 	data_ptr += item_len;
 	len += item_len;
@@ -71,7 +71,7 @@ void Packet::append_item(uint16_t item) {
 
 void Packet::append_item(uint32_t item) {
 	int item_len = sizeof(uint32_t);
-	
+
 	memmove(data + data_ptr, &item, item_len * sizeof(uint8_t));
 	data_ptr += item_len;
 	len += item_len;
@@ -105,7 +105,7 @@ void Packet::append_item(uint8_t *item, int item_len) {
 
 void Packet::append_item(const char *ITEM) {
 	int item_len = strlen(ITEM);
-	
+
 	memmove(data + data_ptr, ITEM, item_len * sizeof(uint8_t));
 	data_ptr += item_len;
 	len += item_len;
@@ -230,7 +230,7 @@ void Packet::extract_item(vector<uint64_t> &item, int item_size) {
 	item.clear();
 	for (i = 0; i < item_size; i++) {
 		uint64_t tem_item;
-	
+
 		memmove(&tem_item, data + data_ptr, item_ele_len * sizeof(uint8_t));
 		data_ptr += item_ele_len;
 		item.push_back(tem_item);
@@ -292,7 +292,7 @@ void Packet::truncate() {
 
 void Packet::clear_pkt() {
 	int data_len = BUF_SIZE;
-	
+
 	memset(data, 0, data_len * sizeof (uint8_t));	
 	data_ptr = 0;
 	len = 0;

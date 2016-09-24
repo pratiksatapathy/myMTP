@@ -1,20 +1,13 @@
 #include "hss.h"
 
 string g_hss_ip_addr = "10.129.28.108";
-//string rmc_path = "tcp:host=10.129.28.108,port=11100";
 int g_hss_port = 6000;
 
 Hss::Hss() {
-	//g_sync.mux_init(mysql_client_mux);
-
-	//ramcloud initialization
-
 
 }
 void Hss::initialize_kvstore_clients(int workers_count){
 
-	//RMCMap<uint64_t,Authinfo> *rc_autn_info = new RMCMap<uint64_t,Authinfo>((char *)rmc_path.c_str(),"rc_autn_info");
-	//cout<<"rand:"<<(rc_autn_info->get(119000000009).value)->rand_num<<endl;
 	ds_autn_infos.resize(workers_count);
 	ds_loc_infos.resize(workers_count);
 	for(int i=0;i<workers_count;i++){
@@ -22,7 +15,7 @@ void Hss::initialize_kvstore_clients(int workers_count){
 		ds_loc_infos[i].bind(ds_path,"ds_loc_info");
 	}
 }
-//making serializable
+
 template<class Archive>
 void Authinfo::serialize(Archive &ar, const unsigned int version)
 {
@@ -30,10 +23,7 @@ void Authinfo::serialize(Archive &ar, const unsigned int version)
 }
 
 void Hss::handle_mysql_conn() {
-	/* Lock not necessary since this is called only once per object. Added for uniformity in locking */
-	//g_sync.mlock(mysql_client_mux);
-	//mysql_client.conn();
-	//g_sync.munlock(mysql_client_mux);
+
 }
 
 void Hss::get_autn_info(uint64_t imsi, uint64_t &key, uint64_t &rand_num, int worker_id) {

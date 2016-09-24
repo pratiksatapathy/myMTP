@@ -2,7 +2,7 @@
 
 string g_ran_ip_addr = "10.129.26.175";
 string g_trafmon_ip_addr = "10.129.26.175";
-string g_mme_ip_addr = "10.129.26.199";//"10.129.41.30";
+string g_mme_ip_addr = "10.129.26.199"; //LOAD BALANCER TO MME
 int g_trafmon_port = 4000;
 int g_mme_port = 5000;
 string g_sgw_s1_ip_addr = SGWLB;
@@ -75,20 +75,19 @@ TrafficMonitor::TrafficMonitor() {
 }
 void TrafficMonitor::initialize() {
 	sgw_s1_clients.resize(client_count);
-		for (int i = 0; i < client_count; i++) {
-			//sgw_s1_clients[i].set_client(g_trafmon_ip_addr);
-			sgw_s1_clients[i].conn(g_trafmon_ip_addr, g_sgw_s1_ip_addr, sgw_s1_port);
-		}
+	for (int i = 0; i < client_count; i++) {
+		sgw_s1_clients[i].conn(g_trafmon_ip_addr, g_sgw_s1_ip_addr, sgw_s1_port);
+	}
 }
 int getHash(string ip,int size){
 
-				ip = ip.substr(ip.find_last_of('.')+1, ip.size());
-				TRACE(cout<<"ipval:"<<ip<<endl;)
-				int index = stoi(ip);
-				TRACE(cout<<"preindex:"<<index<<" "<<size<<endl;)
-				index = index % size;
-				TRACE(cout<<"index:"<<index<<endl;)
-				return index;
+	ip = ip.substr(ip.find_last_of('.')+1, ip.size());
+	TRACE(cout<<"ipval:"<<ip<<endl;)
+	int index = stoi(ip);
+	TRACE(cout<<"preindex:"<<index<<" "<<size<<endl;)
+	index = index % size;
+	TRACE(cout<<"index:"<<index<<endl;)
+	return index;
 }
 void TrafficMonitor::handle_uplink_udata() {
 	Packet pkt;
@@ -100,12 +99,8 @@ void TrafficMonitor::handle_uplink_udata() {
 	bool res;
 
 	tun.rcv(pkt);
-	//XXX change
 	ip_addr = g_nw.get_src_ip_addr(pkt);
-	//index = ((abs(rand()))%10);
-	//cout<<index<<endl;
-	//index = rand()*50;
-	// TRACE(cout << "trafficmonitor_handleuplinkudata:" << " " << pkt.len << ":**" << ip_addr << "**" << endl;)
+
 	res = get_uplink_info(ip_addr, s1_uteid_ul, sgw_s1_ip_addr, sgw_s1_port);
 	if (res == true) {
 		index = getHash(ip_addr,sgw_s1_clients.size());
@@ -114,46 +109,6 @@ void TrafficMonitor::handle_uplink_udata() {
 		sgw_s1_clients[index].snd(pkt);
 	}
 }
-//void TrafficMonitor::handle_uplink_udata(UdpClient &sgw_s1_client) {
-//	cout<<"did get some uplink data"<<endl;
-//	Packet pkt;
-//	string ip_addr;
-//	uint32_t s1_uteid_ul;
-//	string sgw_s1_ip_addr;
-//	int sgw_s1_port;
-//	bool res;
-//
-//	tun.rcv(pkt);
-//	ip_addr = g_nw.get_src_ip_addr(pkt);
-//	TRACE(cout << "trafficmonitor_handleuplinkudata:" << " " << pkt.len << ":**" << ip_addr << "**" << endl;)
-//	res = get_uplink_info(ip_addr, s1_uteid_ul, sgw_s1_ip_addr, sgw_s1_port);
-//	if (res == true) {
-//
-//	string ip = g_nw.get_dst_ip_addr(pkt);
-//	replace(ip.begin(), ip.end(), '.', '0' );
-//	int index = stoll(ip);
-//	//index += rand();
-//	index = index % sgw_s1_clients.size();
-//	//index = (index + rand()) % pgw_sgi_clients.size();
-//
-//	cout<<"uplink_ip:"<<index<<endl;
-//
-//
-//	sgw_s1_client.set_server(g_sgw_s1_ip_addr, sgw_s1_port);
-//
-//	//sgw_s1_client.init(g_trafmon_ip_addr, g_sgw_s1_ip_addr, sgw_s1_port);
-////	sgw_s1_clients[index].snd(pkt);
-//	sgw_s1_client.snd(pkt);
-//
-//	cout<<"ip /port :"<<" "<<sgw_s1_client.get_port()<<endl;
-//	}
-//	//		sgw_s1_client.set_server(sgw_s1_ip_addr, sgw_s1_port);
-//	//		pkt.prepend_gtp_hdr(1, 1, pkt.len, s1_uteid_ul);
-//	//		sgw_s1_client.snd(pkt);
-//	//		cout<<"ip /port :"<<" "<<sgw_s1_client.get_port()<<endl;
-//	//}
-//}
-
 void TrafficMonitor::handle_downlink_udata() {
 	Packet pkt;
 	struct sockaddr_in src_sock_addr;
@@ -236,7 +191,7 @@ bool Ran::authenticate() {
 	autn_num = res + 1;
 	if (autn_num != xautn_num) {
 		TRACE(cout << "ran_authenticate:" << " authentication of MME failure: " << ran_ctx.imsi << endl;)
-				return false;
+						return false;
 	}
 	TRACE(cout << "ran_authenticate:" << " autn success: " << ran_ctx.imsi << endl;)
 	ck = res + 2;
@@ -278,7 +233,7 @@ bool Ran::set_security() {
 		res = g_integrity.cmp_hmacs(hmac_res, hmac_xres);
 		if (res == false) {
 			TRACE(cout << "ran_setsecurity:" << " hmac security mode command failure: " << ran_ctx.imsi << endl;)
-					g_utils.handle_type1_error(-1, "hmac error: ran_setsecurity");
+							g_utils.handle_type1_error(-1, "hmac error: ran_setsecurity");
 		}
 	}
 	TRACE(cout << "ran_setsecurity:" << " security mode command success: " << ran_ctx.imsi << endl;)
@@ -322,7 +277,7 @@ bool Ran::set_eps_session(TrafficMonitor &traf_mon) {
 		res = g_integrity.hmac_check(pkt, ran_ctx.k_nas_int);
 		if (res == false) {
 			TRACE(cout << "ran_setepssession:" << " hmac attach accept failure: " << ran_ctx.imsi << endl;)
-					g_utils.handle_type1_error(-1, "hmac error: ran_setepssession");
+							g_utils.handle_type1_error(-1, "hmac error: ran_setepssession");
 		}
 	}
 	if (ENC_ON) {
@@ -343,7 +298,7 @@ bool Ran::set_eps_session(TrafficMonitor &traf_mon) {
 	pkt.extract_item(res);	
 	if (res == false) {
 		TRACE(cout << "ran_setepssession:" << " attach request failure: " << ran_ctx.imsi << endl;)
-				return false;
+						return false;
 	}	
 	traf_mon.update_uplink_info(ran_ctx.ip_addr, ran_ctx.s1_uteid_ul, epc_addrs.sgw_s1_ip_addr, epc_addrs.sgw_s1_port);
 	ran_ctx.s1_uteid_dl = ran_ctx.s1_uteid_ul;
@@ -420,7 +375,7 @@ bool Ran::detach() {
 		res = g_integrity.hmac_check(pkt, ran_ctx.k_nas_int);
 		if (res == false) {
 			TRACE(cout << "ran_detach:" << " hmac detach failure: " << ran_ctx.imsi << endl;)
-					g_utils.handle_type1_error(-1, "hmac error: ran_detach");
+							g_utils.handle_type1_error(-1, "hmac error: ran_detach");
 		}
 	}
 	if (ENC_ON) {
@@ -429,7 +384,7 @@ bool Ran::detach() {
 	pkt.extract_item(res);
 	if (res == false) {
 		TRACE(cout << "ran_detach:" << " detach failure: " << ran_ctx.imsi << endl;)
-				return false;
+						return false;
 	}
 	TRACE(cout << "ran_detach:" << " detach successful: " << ran_ctx.imsi << endl;)
 	return true;

@@ -13,13 +13,17 @@ vector<thread> g_threads;
 thread g_rtt_thread;
 TrafficMonitor g_traf_mon;
 
-
+/*
 void utraffic_monitor() {
-
+	//UdpClient sgw_s1_client;
+	cout<<"once execution"<<endl;
+	//sgw_s1_client.set_client(g_trafmon_ip_addr);
+	//UdpClient sgw_s1_client;
+		//sgw_s1_client.set_client(g_trafmon_ip_addr);
 	while (1) {
 		g_traf_mon.handle_uplink_udata();
 	}
-
+	
 }
 
 void dtraffic_monitor() {
@@ -27,13 +31,15 @@ void dtraffic_monitor() {
 		g_traf_mon.handle_downlink_udata();		
 	}
 }
+///*
 void ping(){
 	string cmd;
-
+	
 	cmd = "ping -I 172.16.1.3 172.16.0.2 -c 60 | grep \"^rtt\" >> ping.txt";
 	cout << cmd << endl;
 	system(cmd.c_str());
 }
+//*/
 
 void simulate(int arg) {
 	CLOCK::time_point mstart_time;
@@ -67,44 +73,45 @@ void simulate(int arg) {
 		ok = ran.authenticate();
 		if (!ok) {
 			TRACE(cout << "ransimulator_simulate:" << " autn failure" << endl;)
-					return;
+			return;
 		}
 
 		// Set security
 		ok = ran.set_security();
 		if (!ok) {
 			TRACE(cout << "ransimulator_simulate:" << " security setup failure" << endl;)
-					return;
+			return;
 		}
 
 		// Set eps session
 		ok = ran.set_eps_session(g_traf_mon);
 		if (!ok) {
 			TRACE(cout << "ransimulator_simulate:" << " eps session setup failure" << endl;)
-					return;
+			return;
 		}
 
 		///*
 		// To find RTT
-		if (ran_num == 0) {
-			g_rtt_thread = thread(ping);
-			g_rtt_thread.detach();		
-		}
+//		if (ran_num == 0) {
+//cout<<"===========ping============="<<endl;
+//			g_rtt_thread = thread(ping);
+//			g_rtt_thread.detach();
+//		}
 		//*/
 
 		/* Data transfer */
-		ran.transfer_data(g_req_dur);
-
+		//ran.transfer_data(g_req_dur);
+		
 		// Detach
 		ok = ran.detach();
 		if (!ok) {
 			TRACE(cout << "ransimulator_simulate:" << " detach failure" << endl;)
-					return;
+			return;
 		}
 
 		// Stop time
 		mstop_time = CLOCK::now();
-
+		
 		// Response time
 		mtime_diff_us = std::chrono::duration_cast<MICROSECONDS>(mstop_time - mstart_time);
 
@@ -114,13 +121,15 @@ void simulate(int arg) {
 		g_tot_regstime += mtime_diff_us.count();		
 		g_sync.munlock(g_mux);
 
+//cout<<"marker reached"<<endl;
+		//break;
 	}
 }
 
 void check_usage(int argc) {
 	if (argc < 3) {
 		TRACE(cout << "Usage: ./<ran_simulator_exec> THREADS_COUNT DURATION" << endl;)
-				g_utils.handle_type1_error(-1, "Invalid usage error: ransimulator_checkusage");
+		g_utils.handle_type1_error(-1, "Invalid usage error: ransimulator_checkusage");
 	}
 }
 
@@ -140,11 +149,11 @@ void init(char *argv[]) {
 void run() {
 	int i;
 
-	///* Tun
+	/* Tun
 	g_traf_mon.tun.set_itf("tun1", "172.16.0.1/16");
 	g_traf_mon.tun.conn("tun1");
 
-	/* Traffic monitor server //*/
+	/* Traffic monitor server
 	TRACE(cout << "Traffic monitor server started" << endl;)
 	g_traf_mon.server.run(g_trafmon_ip_addr, g_trafmon_port);	
 
@@ -165,7 +174,7 @@ void run() {
 		g_dmon_thread[i] = thread(dtraffic_monitor);
 		g_dmon_thread[i].detach();			
 	}
-
+	
 	// Simulator threads */
 	for (i = 0; i < g_threads_count; i++) {
 		g_threads[i] = thread(simulate, i);
@@ -179,7 +188,7 @@ void run() {
 
 void print_results() {
 	g_run_dur = difftime(time(0), g_start_time);
-
+	
 	cout << endl << endl;
 	cout << "Requested duration has ended. Finishing the program." << endl;
 	cout << "Total number of registrations is " << g_tot_regs << endl;

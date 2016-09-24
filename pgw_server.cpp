@@ -10,7 +10,7 @@ Pgw g_pgw;
 void check_usage(int argc) {
 	if (argc < 3) {
 		TRACE(cout << "Usage: ./<pgw_server_exec> S5_SERVER_THREADS_COUNT SGI_SERVER_THREADS_COUNT" << endl;)
-				g_utils.handle_type1_error(-1, "Invalid usage error: pgwserver_checkusage");
+						g_utils.handle_type1_error(-1, "Invalid usage error: pgwserver_checkusage");
 	}
 }
 
@@ -97,9 +97,8 @@ int getIndex(Packet pkt){
 	int size = g_s5_server_threads_count;
 	string ip = g_nw.get_dst_ip_addr(pkt);
 	ip = ip.substr(ip.find_last_of('.')+1, ip.size());
-TRACE(cout<<"ipval:"<<ip<<endl;)
+	TRACE(cout<<"ipval:"<<ip<<endl;)
 	int index = stoi(ip);
-	//cout<<"preindex:"<<index<<" "<<size<<endl;
 	index = index % size;
 	TRACE(cout<<"index:"<<index<<endl;)
 	return index;

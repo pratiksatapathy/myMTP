@@ -16,10 +16,10 @@ void traffic_monitor() {
 		FD_ZERO(&rcv_set);
 		FD_SET(g_traf_mon.server.conn_fd, &rcv_set); 
 		FD_SET(g_traf_mon.tun.conn_fd, &rcv_set); 
-		
+
 		status = select(max_fd + 1, &rcv_set, NULL, NULL, NULL);
 		g_utils.handle_type1_error(status, "select error: sinkserver_trafficmonitor");		
-		
+
 		if (FD_ISSET(g_traf_mon.server.conn_fd, &rcv_set)) {
 			g_traf_mon.handle_uplink_udata();
 		}
@@ -41,7 +41,7 @@ void sink(int sink_num) {
 void check_usage(int argc) {
 	if (argc < 2) {
 		TRACE(cout << "Usage: ./<sink_server_exec> THREADS_COUNT" << endl;)
-		g_utils.handle_type1_error(-1, "Invalid usage error: sinkserver_checkusage");
+						g_utils.handle_type1_error(-1, "Invalid usage error: sinkserver_checkusage");
 	}
 }
 
@@ -50,7 +50,7 @@ void init(char *argv[]) {
 	g_threads.resize(g_threads_count);
 	pgw_sgi_clients.resize(g_threads_count);
 
-for (int i = 0; i < g_threads_count; i++) {
+	for (int i = 0; i < g_threads_count; i++) {
 
 		pgw_sgi_clients[i].conn(g_sink_ip_addr, g_pgw_sgi_ip_addr, g_pgw_sgi_port);
 

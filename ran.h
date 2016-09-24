@@ -103,7 +103,7 @@ public:
 class TrafficMonitor {
 private:
 	unordered_map<string, UplinkInfo> uplink_info;
-	
+
 	/* Lock parameter */
 	pthread_mutex_t uplinkinfo_mux; /* Handles uplink_info */
 
@@ -136,10 +136,10 @@ private:
 
 	void set_crypt_context();
 	void set_integrity_context();
-	
+
 public:
 	RanContext ran_ctx;
-	
+
 	void init(int);
 	void conn_mme();
 	void initial_attach();

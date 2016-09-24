@@ -54,15 +54,16 @@ using namespace kvstore;
 typedef std::chrono::high_resolution_clock CLOCK;
 typedef std::chrono::microseconds MICROSECONDS;
 
+#define INIT_VAL 100000000
 
 #define MME "10.129.26.104"
-#define MME "10.129.28.33"
+//#define MME "10.129.28.33"
 
 #define SGW "10.129.28.191"
-#define SGW "10.129.28.224"
+//#define SGW "10.129.28.224"
 
 #define PGW "10.129.28.147"
-#define PGW "10.129.26.101"
+//#define PGW "10.129.26.101"
 
 #define MMELB "10.129.26.199"
 #define SGWLB "10.129.26.200"

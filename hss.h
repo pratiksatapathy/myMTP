@@ -30,18 +30,15 @@ public:
 class Hss {
 private:
 	pthread_mutex_t mysql_client_mux;
-//	RMCMap<uint64_t,Authinfo> *rc_autn_info;
-//	RMCMap<uint64_t,uint32_t> *rc_loc_info;
 	
-	vector<KVStore<uint64_t,Authinfo>> ds_autn_infos;
-	vector<KVStore<uint64_t,uint32_t>> ds_loc_infos;
+	vector<KVStore<uint64_t,Authinfo>> ds_autn_infos; //kvstore interfacing
+	vector<KVStore<uint64_t,uint32_t>> ds_loc_infos; //kvstore interfacing
 
 	void get_autn_info(uint64_t, uint64_t&, uint64_t&, int);
 	void set_loc_info(uint64_t, uint32_t, int);
 	
 public:
 	SctpServer server;
-	//MySql mysql_client;
 
 	Hss();
 	void handle_mysql_conn();

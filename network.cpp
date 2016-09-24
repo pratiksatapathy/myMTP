@@ -10,7 +10,7 @@ Network g_nw;
 
 void Network::set_inet_sock_addr(string ip_addr, int port, struct sockaddr_in &sock_addr) {
 	int status;
-	
+
 	bzero((void*)&sock_addr, sizeof(sock_addr));
 	sock_addr.sin_family = AF_INET;
 	sock_addr.sin_port = htons(port);
@@ -23,7 +23,7 @@ void Network::set_inet_sock_addr(string ip_addr, int port, struct sockaddr_in &s
 
 void Network::bind_sock(int sock_fd, struct sockaddr_in sock_addr) {
 	int status;
-	
+
 	status = bind(sock_fd, (struct sockaddr*)&sock_addr, sizeof(sock_addr));
 	g_utils.handle_type1_error(status, "Bind error: network_bindsock");
 }
@@ -46,23 +46,23 @@ void Network::set_rcv_timeout(int sock_fd, int level) {
 	int status;
 
 	switch (level) {
-		/* Timeout period = 5s */
-		case 1:
-			status = setsockopt(sock_fd, SOL_SOCKET, SO_RCVTIMEO, (struct timeval*)&g_timeout_lev1, sizeof(struct timeval));
-			break;
+	/* Timeout period = 5s */
+	case 1:
+		status = setsockopt(sock_fd, SOL_SOCKET, SO_RCVTIMEO, (struct timeval*)&g_timeout_lev1, sizeof(struct timeval));
+		break;
 
 		/* Timeout period = 30s */
-		case 2:
-			status = setsockopt(sock_fd, SOL_SOCKET, SO_RCVTIMEO, (struct timeval*)&g_timeout_lev2, sizeof(struct timeval));
-			break;
+	case 2:
+		status = setsockopt(sock_fd, SOL_SOCKET, SO_RCVTIMEO, (struct timeval*)&g_timeout_lev2, sizeof(struct timeval));
+		break;
 
 		/* Timeout period = 60s */
-		case 3:
-			status = setsockopt(sock_fd, SOL_SOCKET, SO_RCVTIMEO, (struct timeval*)&g_timeout_lev3, sizeof(struct timeval));
-			break;
+	case 3:
+		status = setsockopt(sock_fd, SOL_SOCKET, SO_RCVTIMEO, (struct timeval*)&g_timeout_lev3, sizeof(struct timeval));
+		break;
 
-		default:
-			g_utils.handle_type1_error(status, "Incorrect timeout level: network_setrcvtimeout");
+	default:
+		g_utils.handle_type1_error(status, "Incorrect timeout level: network_setrcvtimeout");
 	}
 	g_utils.handle_type1_error(status, "Setsockopt rcv timeout error: network_setrcvtimeout");
 }

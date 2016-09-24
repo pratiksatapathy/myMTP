@@ -26,7 +26,7 @@ void UdpServer::snd(struct sockaddr_in dst_sock_addr, Packet pkt){
 		status = sendto(conn_fd, pkt.data, pkt.len, 0, (sockaddr*)&dst_sock_addr, g_sock_addr_len);
 		if (errno == EPERM) {
 			TRACE(cout << "Too many writes to a socket - error: udpserver_snd" << endl;)
-			errno = 0;
+					errno = 0;
 			usleep(1000);
 			continue;
 		}

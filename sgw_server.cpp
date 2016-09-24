@@ -13,7 +13,7 @@ Sgw g_sgw;
 void check_usage(int argc) {
 	if (argc < 4) {
 		TRACE(cout << "Usage: ./<sgw_server_exec> S11_SERVER_THREADS_COUNT S1_SERVER_THREADS_COUNT S5_SERVER_THREADS_COUNT" << endl;)
-				g_utils.handle_type1_error(-1, "Invalid usage error: sgwserver_checkusage");
+						g_utils.handle_type1_error(-1, "Invalid usage error: sgwserver_checkusage");
 	}
 }
 
@@ -33,9 +33,9 @@ void run() {
 
 	//uplink clients
 	pgw_s5_clients.resize(g_s1_server_threads_count);
-		for (i = 0; i < g_s1_server_threads_count; i++) {
-			pgw_s5_clients[i].conn(SGW,PGWLB,8000);
-		}
+	for (i = 0; i < g_s1_server_threads_count; i++) {
+		pgw_s5_clients[i].conn(SGW,PGWLB,8000);
+	}
 	/* SGW S11 server */
 	TRACE(cout << "SGW S11 server started" << endl;)
 	g_sgw.s11_server.run(g_sgw_s11_ip_addr, g_sgw_s11_port);
@@ -115,9 +115,8 @@ int getIndex(Packet pkt){
 	string ip = g_nw.get_dst_ip_addr(pkt);
 	TRACE(cout<<"original ip: "<<ip<<endl;)
 	ip = ip.substr(ip.find_last_of('.')+1, ip.size());
-TRACE(cout<<"ipval:"<<ip<<endl;)
+	TRACE(cout<<"ipval:"<<ip<<endl;)
 	int index = stoi(ip);
-	//cout<<"preindex:"<<index<<" "<<size<<endl;
 	index = index % size;
 	TRACE(cout<<"index:"<<index<<endl;)
 	return index;
